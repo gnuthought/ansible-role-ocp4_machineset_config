@@ -1,6 +1,6 @@
 ---
 galaxy_info:
-  role_name: ocp4-machineset-config
+  role_name: ocp4_machineset_config
   author: Johnathan Kupferer
   description: Configure OpenShift 4 MachineSets
   license: MIT

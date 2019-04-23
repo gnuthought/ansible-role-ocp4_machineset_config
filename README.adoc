@@ -1,4 +1,4 @@
-# ocp4-machineset-config
+# ocp4_machineset_config
 
 OpenShift 4 MachineSet management to implement custom machinesets such as to
 create dedicated compute and infra nodes.
@@ -21,7 +21,7 @@ this Ansible role redundant.
   connection: local
   gather_facts: no
   roles:
-  - role: ocp4-machineset-config
+  - role: ocp4_machineset_config
   vars:
     ocp4_machineset_config_disable_base_worker_machinesets: true
     ocp4_machineset_config_groups:
@@ -44,7 +44,7 @@ this Ansible role redundant.
 
 ```
 ansible-galaxy install \
-https://github.com/gnuthought/ansible-role-ocp4-machineset-config/archive/master.tar.gz#/ocp4-machineset-config
+https://github.com/gnuthought/ansible-role-ocp4_machineset_config/archive/master.tar.gz#/ocp4_machineset_config
 ```
 
 ## Configuration
