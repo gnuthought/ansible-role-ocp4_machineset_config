@@ -40,6 +40,13 @@ this Ansible role redundant.
         node-role.kubernetes.io/infra: ""
 ```
 
+## Installation
+
+```
+ansible-galaxy install \
+https://github.com/gnuthought/ansible-role-ocp4-machineset-config/archive/master.tar.gz#/ocp4-machineset-config
+```
+
 ## Configuration
 
 .Top level configuration variables
