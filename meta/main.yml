@@ -5,7 +5,10 @@ galaxy_info:
   description: Configure OpenShift 4 MachineSets
   license: MIT
   min_ansible_version: 2.7
-  platforms: []
+  platforms:
+  - name: GenericLinux
+    versions:
+    - all
   galaxy_tags:
   - ocp
   - openshift
