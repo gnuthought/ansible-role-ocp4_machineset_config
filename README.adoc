@@ -3,7 +3,7 @@
 OpenShift 4 MachineSet management to implement custom machinesets such as to
 create dedicated compute and infra nodes.
 
-This Ansible role will query the cluster for the base worker machinesets
+This Ansible role will query the cluster for the default worker machinesets
 provisioned by the installer and then manage custom machinesets based on the
 discovered worker configuration information.
 
@@ -14,7 +14,9 @@ any time. In particular we hope that the standard OpenShift installer or a
 standard OpenShift 4 operator will manage custom machinesets such as to render
 this Ansible role redundant.
 
-## Example Playbook
+## Example Playbooks
+
+Example creating machinesets based on default worker machinesets:
 
 ```
 - hosts: localhost
@@ -23,19 +25,50 @@ this Ansible role redundant.
   roles:
   - role: ocp4_machineset_config
   vars:
-    ocp4_machineset_config_disable_base_worker_machinesets: true
+    ocp4_machineset_config_disable_default_worker_machinesets: true
+    ocp4_machineset_config_groups:
+    - name: compute
+      autoscale: true
+      role: compute
+      total_replicas_min: 3
+      total_replicas_max: 30
+      aws_instance_type: m4.large
+      aws_root_volume_size: 80
+    - name: infra
+      role: infra
+      total_replicas: 2
+      aws_instance_type: m4.large
+```
+
+Example creating machinesets from scratch:
+
+```
+---
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  roles:
+  - role: ocp4_machineset_config
+  vars:
+    ocp4_machineset_config_cloud_provider: aws
+    ocp4_machineset_config_cluster_infra_id: "{{ lookup('env', 'INFRA_ID') }}"
+    ocp4_machineset_config_aws_iam_instance_profile_id: "{{ lookup('env', 'WorkerInstanceProfile') }}"
+    ocp4_machineset_config_aws_security_group_search_key: group-id
+    ocp4_machineset_config_aws_security_group_search_value: "{{ lookup('env', 'WorkerSecurityGroupId') }}"
+    ocp4_machineset_config_aws_availability_zone_data: >-
+      {{ lookup('pipe', 'aws ec2 describe-subnets --region=$REGION --subnet-ids ${PrivateSubnetIds//,/ }') }}
     ocp4_machineset_config_groups:
     - name: compute
       aws_instance_type: m4.large
       aws_root_volume_size: 80
       autoscale: true
       role: compute
-      total_replicas_min: 3
+      total_replicas_min: 1
       total_replicas_max: 30
     - name: infra
       aws_instance_type: m4.large
       role: infra
-      total_replicas: 2
+      total_replicas: 1
 ```
 
 ## Installation
@@ -54,34 +87,74 @@ https://github.com/gnuthought/ansible-role-ocp4_machineset_config/archive/master
 | Default
 | Description
 
+| `ocp4_machineset_config_cloud_provider`
+| (detect from default worker machinesets)
+| Cloud provider, currently only "aws" is supported.
+
+| `ocp4_machineset_config_cluster_infra_id`
+| (detect from default worker machinesets)
+| Infrastructure tag and label used to identify cluster.
+
 | `ocp4_machineset_config_domain`
 | `"ocp4-machineset-config.gnuthought.com"`
 | Domain used for custom group label.
 
 | `ocp4_machineset_config_group_label`
 | `"{{ ocp4_machineset_config_domain }}/machineset-group"`
-| Label applied to machinesets to identify managed machinesets.
+| Label applied to machinesets to identify machinesets managed by this role.
 
 | `ocp4_machineset_config_groups`
 | `[]`
 | Listed of machineset groups, described below.
 
-| `ocp4_machineset_config_default_aws_instance_type`
+| `ocp4_machineset_config_disable_default_worker_machinesets`
+| `false`
+| Boolean to indicate if default worker machinesets should be scaled to zero.
+
+| `openshift_cluster_autoscaler_spec`
+| `{"scaleDown:{"enabled": true}}`
+| Value for spec section of ClusterAutoscaler definition, applied if any
+machineset enables autoscaling.
+|===
+
+.AWS configuration variables
+[options="header",cols="30%,10%,60%"]
+|===
+| Variable
+| Default
+| Description
+
+| `ocp4_machineset_config_aws_availability_zone_data`
+| None
+| JSON output of `aws ec2 describe-subnets --region=$REGION --subnet-ids ...`
+
+| `ocp4_machineset_config_aws_availability_zones`
+| (detect from default worker machinesets)
+| Availability zones for worker machinesets
+
+| `ocp4_machineset_config_aws_iam_instance_profile_id`
+| (detect from default worker machinesets)
+| AWS IAM instance profile ID
+
+| `ocp4_machineset_config_aws_instance_type`
 | `"m4.large"`
 | Default AWS instance type.
 
-| `ocp4_machineset_config_default_aws_root_volume_size`
+| `ocp4_machineset_config_aws_root_volume_size`
 | `120`
 | AWS root volume size default in GB
 
-| `ocp4_machineset_config_disable_base_worker_machinesets`
-| `false`
-| Boolean to indicate if base worker machinesets should be scaled to zero.
+| `ocp4_machineset_config_aws_security_group_search_key`
+| (detect from default worker machinesets)
+| Key used to find security group
 
-| `ocp4_cluster_autoscaler_spec`
-| `{"enabled": true}`
-| Value for spec section of ClusterAutoscaler definition, applied if any
-machineset enables autoscaling.
+| `ocp4_machineset_config_aws_security_group_search_value`
+| (detect from default worker machinesets)
+| Value used to find security group
+
+| `ocp4_machineset_config_aws_tags`
+| Cluster infra id label
+| Tags applied to AWS ec2 instances
 |===
 
 .`ocp4_machineset_config_groups` item values
@@ -116,10 +189,10 @@ machineset enables autoscaling.
 | Total maximum number of machineset replicas for non-autoscaling machinesets
 
 | `aws_instance_type`
-| `ocp4_machineset_config_default_aws_instance_type`
-| AWS instance type
+| `ocp4_machineset_config_aws_instance_type`
+| Default AWS instance type
 
 | `aws_root_volume_size`
-| `ocp4_machineset_config_default_aws_root_volume_size`
-| Root EBS storage disk size
+| `ocp4_machineset_config_aws_root_volume_size`
+| Default root EBS storage disk size
 |===

@@ -1,11 +1,39 @@
 ---
+
+# Required if no default worker machinesets found
+#ocp4_machineset_config_cloud_provider: ...
+#ocp4_machineset_config_cluster_infra_id: ...
+
 ocp4_machineset_config_domain: ocp4-machineset-config.gnuthought.com
 ocp4_machineset_config_group_label: "{{ ocp4_machineset_config_domain }}/machineset-group"
 ocp4_machineset_config_groups: []
-ocp4_machineset_config_default_aws_instance_type: m4.large
-ocp4_machineset_config_default_aws_root_volume_size: 120
-ocp4_machineset_config_disable_base_worker_machinesets: false
+ocp4_machineset_config_disable_default_worker_machinesets: false
 
-ocp4_cluster_autoscaler_spec:
+openshift_cluster_autoscaler_spec:
   scaleDown:
     enabled: true
+
+#
+# AWS configuration
+#
+
+# Default ist of availability zones for machinesets
+#ocp4_machineset_config_aws_availability_zones
+
+# JSON output of `aws ec2 describe-subnets --region=$REGION --subnet-ids ...`
+#ocp4_machineset_config_aws_availability_zone_data:
+
+# List of availability zones with configuration
+#ocp4_machineset_config_aws_availability_zones:
+
+# Must be set globally or on machineset groups as `aws_iam_instance_profile_id`
+#ocp4_machineset_config_aws_iam_instance_profile_id: ...
+
+# Default instance type for machinesets
+ocp4_machineset_config_aws_instance_type: m4.large
+
+# Default root volume size for machines
+ocp4_machineset_config_aws_root_volume_size: 120
+
+# Must be set globally or on machineset groups as `aws_tags`
+#ocp4_machineset_config_aws_tags: ...

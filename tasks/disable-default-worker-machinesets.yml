@@ -10,7 +10,7 @@
         namespace: openshift-machine-api
       spec:
         replicas: 0
-  loop: "{{ ocp4_base_worker_machinesets }}"
+  loop: "{{ default_worker_machinesets }}"
   loop_control:
     label: "{{ machineset.metadata.name }}"
     loop_var: machineset

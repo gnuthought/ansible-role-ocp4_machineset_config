@@ -6,37 +6,46 @@
     namespace: openshift-machine-api
   register: r_get_machinesets
 
-- name: Set ocp4_base_worker_machinesets
+- name: Set default_worker_machinesets
   set_fact:
-    ocp4_current_machinesets: >-
+    current_machinesets: >-
       {{ r_get_machinesets.resources }}
-    ocp4_current_machineset_names: >-
+    current_machineset_names: >-
       {{ r_get_machinesets.resources
        | json_query('[].metadata.name')
       }}
-    ocp4_base_worker_machinesets: >-
+    default_worker_machinesets: >-
       {{ r_get_machinesets.resources
-       | json_query(base_worker_machineset_json_query)
+       | json_query(default_worker_machineset_json_query)
       }}
   vars:
     # Base worker machinesets will lack machineset group label
-    base_worker_machineset_json_query: >-
+    default_worker_machineset_json_query: >-
       [?!contains(keys(metadata.labels), '{{ machineset_group_label }}')]
-
-- debug: var=ocp4_current_machineset_names
 
 - name: Set cluster facts
   set_fact:
-    cluster_label: >-
+    ocp4_machineset_config_cluster_infra_id: >-
       {{ reference_machineset.metadata.labels['machine.openshift.io/cluster-api-cluster'] }}
-    cloud_provider_api_version: >-
-      {{ reference_provider_spec_value.apiVersion }}
-    cloud_provider_platform: >-
+    ocp4_machineset_config_cloud_provider: >-
       {{ reference_provider_spec_value.apiVersion
        | regex_replace('providerconfig\.openshift\.io/v1beta1', '')
       }}
   vars:
     reference_machineset: >-
-      {{ ocp4_base_worker_machinesets[0] }}
+      {{ default_worker_machinesets[0] | default({}) }}
     reference_provider_spec_value: >-
-      {{ reference_machineset.spec.template.spec.providerSpec.value }}
+      {{ reference_machineset
+       | json_query('spec.template.spec.providerSpec.value')
+      }}
+  when: default_worker_machinesets
+
+- name: Fail if ocp4_machineset_config_cloud_provider is undefined
+  fail:
+    msg: ocp4_machineset_config_cloud_provider is required
+  when: ocp4_machineset_config_cloud_provider is undefined
+
+- name: Fail if ocp4_machineset_config_cluster_infra_id is undefined
+  fail:
+    msg: ocp4_machineset_config_cluster_infra_id is required
+  when: ocp4_machineset_config_cluster_infra_id is undefined

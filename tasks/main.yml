@@ -2,12 +2,12 @@
 - name: Set machineset facts
   include_tasks: set-facts.yml
 
-- name: Disable base worker machinesets
-  include_tasks: disable-base-worker-machinesets.yml
-  when: disable_base_worker_machinesets|bool
-
 - name: Configure machinesets for cloud provider
-  include_tasks: "{{ cloud_provider_platform }}.yml"
+  include_tasks: "{{ ocp4_machineset_config_cloud_provider }}.yml"
+
+- name: Disable default worker machinesets
+  include_tasks: disable-default-worker-machinesets.yml
+  when: disable_default_worker_machinesets|bool
 
 - name: Enable cluster autoscaler
   include_tasks: enable-cluster-autoscaler.yml

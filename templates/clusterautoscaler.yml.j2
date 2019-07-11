@@ -3,4 +3,4 @@ apiVersion: autoscaling.openshift.io/v1
 kind: ClusterAutoscaler
 metadata:
   name: default
-spec: {{ ocp4_cluster_autoscaler_spec | to_json }}
+spec: {{ openshift_cluster_autoscaler_spec | to_json }}
